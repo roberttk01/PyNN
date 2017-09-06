@@ -3,11 +3,11 @@ from scipy import optimize
 
 
 class NeuralNetwork(object):
-    def __init__(self):
+    def __init__(self, inputLayerZSize=2, outputLayerSize=1, hiddenLayerSize=3):
         # Define Hyperparameters
-        self.inputLayerSize = 2
-        self.outputLayerSize = 1
-        self.hiddenLayerSize = 3
+        self.inputLayerSize = inputLayerZSize
+        self.outputLayerSize = outputLayerSize
+        self.hiddenLayerSize = hiddenLayerSize
 
         # Weights (parameters)
         self.W1 = np.random.randn(self.inputLayerSize, self.hiddenLayerSize)
@@ -24,6 +24,7 @@ class NeuralNetwork(object):
     def sigmoid(self, z):
         # Apply sigmoid activation function to scalar, vector, or matrix
         return 1 / (1 + np.exp(-z))
+
 
     def sigmoidPrime(self, z):
         # Gradient of sigmoid
@@ -66,31 +67,31 @@ class NeuralNetwork(object):
         return np.concatenate((dJdW1.ravel(), dJdW2.ravel()))
 
 
-def computeNumericalGradient(N, X, y):
-    paramsInitial = N.getParams()
-    numgrad = np.zeros(paramsInitial.shape)
-    perturb = np.zeros(paramsInitial.shape)
-    e = 1e-4
+    def computeNumericalGradient(N, X, y):
+        paramsInitial = N.getParams()
+        numgrad = np.zeros(paramsInitial.shape)
+        perturb = np.zeros(paramsInitial.shape)
+        e = 1e-4
 
-    for p in range(len(paramsInitial)):
-        # Set perturbation vector
-        perturb[p] = e
-        N.setParams(paramsInitial + perturb)
-        loss2 = N.costFunction(X, y)
+        for p in range(len(paramsInitial)):
+            # Set perturbation vector
+            perturb[p] = e
+            N.setParams(paramsInitial + perturb)
+            loss2 = N.costFunction(X, y)
 
-        N.setParams(paramsInitial - perturb)
-        loss1 = N.costFunction(X, y)
+            N.setParams(paramsInitial - perturb)
+            loss1 = N.costFunction(X, y)
 
-        # Compute Numerical Gradient
-        numgrad[p] = (loss2 - loss1) / (2 * e)
+            # Compute Numerical Gradient
+            numgrad[p] = (loss2 - loss1) / (2 * e)
 
-        # Return the value we changed to zero:
-        perturb[p] = 0
+            # Return the value we changed to zero:
+            perturb[p] = 0
 
-    # Return Params to original value:
-    N.setParams(paramsInitial)
+        # Return Params to original value:
+        N.setParams(paramsInitial)
 
-    return numgrad
+        return numgrad
 
 
 class trainer(object):
@@ -118,9 +119,11 @@ class trainer(object):
 
         params0 = self.N.getParams()
 
-        options = {'maxiter': 200, 'disp': True}
+        options = {'maxiter': 1500, 'disp': True}
         _res = optimize.minimize(self.costFunctionWrapper, params0, jac=True, method='BFGS', args=(X, y),
                                  options=options, callback=self.callbackF)
 
         self.N.setParams(_res.x)
         self.optimizationResults = _res
+
+
